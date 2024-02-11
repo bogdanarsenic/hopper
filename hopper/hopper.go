@@ -16,7 +16,7 @@ import (
 func start(reader io.Reader) []string {
 	sc := bufio.NewReader(reader)
 
-retry:
+Retry:
 
 	fmt.Println("Start Processing:")
 	lineNumber := 0
@@ -43,7 +43,7 @@ retry:
 			numOfCases, err = strconv.Atoi(currentLine)
 			if err != nil || numOfCases < 1 || numOfCases > constants.MAX_GRID {
 				fmt.Printf("Invalid number of test cases. Please write one number between 1 and %d!\n", constants.MAX_GRID)
-				goto retry
+				goto Retry
 			}
 			tCases = make([]*models.TCase, numOfCases)
 		} else {
@@ -52,28 +52,28 @@ retry:
 				tCases, err = validators.ValidateGrid(tCases, currentCase, currentLine)
 				if err != nil {
 					fmt.Println(err)
-					goto retry
+					goto Retry
 				}
 				caseLine++
 			case 1:
 				tCases, err = validators.ValidatePosition(tCases, currentCase, currentLine, caseLine)
 				if err != nil {
 					fmt.Println(err)
-					goto retry
+					goto Retry
 				}
 				caseLine++
 			case 2:
 				obstacleLines, err = strconv.Atoi(currentLine)
 				if err != nil || obstacleLines < 1 || obstacleLines > constants.MAX_GRID {
 					fmt.Printf("Invalid number of obstacles. Please write one number between 1 and %d!\n", constants.MAX_GRID)
-					goto retry
+					goto Retry
 				}
 				caseLine++
 			default:
 				tCases, err = validators.ValidatePosition(tCases, currentCase, currentLine, caseLine)
 				if err != nil {
 					fmt.Println(err)
-					goto retry
+					goto Retry
 				}
 				obstacleLines--
 				if obstacleLines == 0 {

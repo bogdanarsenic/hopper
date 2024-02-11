@@ -1,14 +1,19 @@
 package main
 
 import (
+	"io"
+	"reflect"
+	"strings"
 	"testing"
+
+	models "./models"
 )
 
 func Test_hopper(t *testing.T) {
 	type args struct {
-		g grid
-		r route
-		o []obstacle
+		Grid      models.Grid
+		Route     models.Route
+		Obstacles []models.Obstacle
 	}
 	tests := []struct {
 		name string
@@ -18,15 +23,15 @@ func Test_hopper(t *testing.T) {
 		{
 			name: "case1",
 			args: args{
-				g: grid{5, 5},
-				r: route{point{
-					x: 4,
-					y: 0,
-				}, point{
-					x: 4,
-					y: 4,
+				Grid: models.Grid{5, 5},
+				Route: models.Route{models.Point{
+					X: 4,
+					Y: 0,
+				}, models.Point{
+					X: 4,
+					Y: 4,
 				}},
-				o: []obstacle{
+				Obstacles: []models.Obstacle{
 					{1, 4, 2, 3},
 				},
 			},
@@ -35,15 +40,15 @@ func Test_hopper(t *testing.T) {
 		{
 			name: "case2",
 			args: args{
-				g: grid{3, 3},
-				r: route{point{
-					x: 0,
-					y: 0,
-				}, point{
-					x: 2,
-					y: 2,
+				Grid: models.Grid{3, 3},
+				Route: models.Route{models.Point{
+					X: 0,
+					Y: 0,
+				}, models.Point{
+					X: 2,
+					Y: 2,
 				}},
-				o: []obstacle{
+				Obstacles: []models.Obstacle{
 					{1, 1, 0, 2},
 					{0, 2, 1, 1},
 				},
@@ -53,44 +58,44 @@ func Test_hopper(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := processTestCase(tt.args.g, tt.args.r, tt.args.o); got != tt.want {
+			if got := processTestCase(tt.args.Grid, tt.args.Route, tt.args.Obstacles); got != tt.want {
 				t.Errorf("hopper() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-// func Test_hopperStart(t *testing.T) {
-// 	type args struct {
-// 		reader io.Reader
-// 	}
-// 	tests := []struct {
-// 		name string
-// 		args args
-// 		want []string
-// 	}{
-// 		{
-// 			name: "test",
-// 			args: args{reader: strings.NewReader(`2
-// 5 5
-// 4 0 4 4
-// 1
-// 1 4 2 3
-// 3 3
-// 0 0 2 2
-// 2
-// 1 1 0 2
-// 0 2 1 1
+func Test_hopperStart(t *testing.T) {
+	type args struct {
+		reader io.Reader
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			name: "test",
+			args: args{reader: strings.NewReader(`2
+5 5
+4 0 4 4
+1
+1 4 2 3
+3 3
+0 0 2 2
+2
+1 1 0 2
+0 2 1 1
 
-// `)},
-// 			want: []string{"Optimal solution takes 7 hops.", "No solution."},
-// 		},
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			if got := start(tt.args.reader); !reflect.DeepEqual(got, tt.want) {
-// 				t.Errorf("start() = %v, want %v", got, tt.want)
-// 			}
-// 		})
-// 	}
-// }
+`)},
+			want: []string{"Optimal solution takes 7 hops.", "No solution."},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := start(tt.args.reader); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("start() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

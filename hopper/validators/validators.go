@@ -5,11 +5,11 @@ import (
 	"strconv"
 	"strings"
 
-	constants "constants"
-	models "models"
+	models "../models"
+	constants "../models/constants"
 )
 
-func ValidatePosition(tCases []*models.TCase, currentCase int, currentLine string, caseLine int) ([]*models.tCase, error) {
+func ValidatePosition(tCases []*models.TCase, currentCase int, currentLine string, caseLine int) ([]*models.TCase, error) {
 	givenRoute := strings.Split(currentLine, " ")
 	obs := models.Obstacle{}
 
@@ -27,59 +27,59 @@ func ValidatePosition(tCases []*models.TCase, currentCase int, currentLine strin
 		}
 		if i < 2 {
 			if i%2 == 0 {
-				if x >= tCases[currentCase].g.column {
-					err = fmt.Errorf("Number for x1 position is larger than the column number %d!\n", tCases[currentCase].g.column)
+				if x >= tCases[currentCase].Grid.Column {
+					err = fmt.Errorf("Number for x1 position is larger than the column number %d!\n", tCases[currentCase].Grid.Column)
 					return nil, err
 				}
 				if caseLine == 1 {
-					tCases[currentCase].r.start.x = x
+					tCases[currentCase].Route.Start.X = x
 				} else {
-					obs.x1 = x
+					obs.X1 = x
 				}
 			} else {
-				if x >= tCases[currentCase].g.row {
-					err = fmt.Errorf("Number for y1 position is larger than the row number %d!\n", tCases[currentCase].g.row)
+				if x >= tCases[currentCase].Grid.Row {
+					err = fmt.Errorf("Number for y1 position is larger than the row number %d!\n", tCases[currentCase].Grid.Row)
 					return nil, err
 				}
 				if caseLine == 1 {
-					tCases[currentCase].r.start.y = x
+					tCases[currentCase].Route.Start.Y = x
 				} else {
-					obs.x2 = x
+					obs.X2 = x
 				}
 
 			}
 		} else {
 			if i%2 == 0 {
-				if x >= tCases[currentCase].g.column {
-					err = fmt.Errorf("Number for x2 position is larger than the column number %d!\n", tCases[currentCase].g.column)
+				if x >= tCases[currentCase].Grid.Column {
+					err = fmt.Errorf("Number for x2 position is larger than the column number %d!\n", tCases[currentCase].Grid.Column)
 					return nil, err
 				}
 				if caseLine == 1 {
-					tCases[currentCase].r.end.x = x
+					tCases[currentCase].Route.End.X = x
 				} else {
-					obs.y1 = x
+					obs.Y1 = x
 				}
 			} else {
-				if x >= tCases[currentCase].g.row {
-					err = fmt.Errorf("Number for y2 position is larger than the row number %d!\n", tCases[currentCase].g.row)
+				if x >= tCases[currentCase].Grid.Row {
+					err = fmt.Errorf("Number for y2 position is larger than the row number %d!\n", tCases[currentCase].Grid.Row)
 					return nil, err
 				}
 				if caseLine == 1 {
-					tCases[currentCase].r.end.y = x
+					tCases[currentCase].Route.End.Y = x
 				} else {
-					obs.y2 = x
+					obs.Y2 = x
 				}
 			}
 		}
 	}
 	if caseLine != 1 {
-		tCases[currentCase].o = append(tCases[currentCase].o, obs)
+		tCases[currentCase].Obstacles = append(tCases[currentCase].Obstacles, obs)
 	}
 	return tCases, nil
 }
 
-func ValidateGrid(tCases []*models.tCase, currentCase int, currentLine string) ([]*models.tCase, error) {
-	tCases[currentCase] = &models.tCase{}
+func ValidateGrid(tCases []*models.TCase, currentCase int, currentLine string) ([]*models.TCase, error) {
+	tCases[currentCase] = &models.TCase{}
 	var err error
 	givenGrid := strings.Split(currentLine, " ")
 	if len(givenGrid) != 2 {
@@ -93,9 +93,9 @@ func ValidateGrid(tCases []*models.tCase, currentCase int, currentLine string) (
 			return nil, err
 		}
 		if i%2 == 0 {
-			tCases[currentCase].g.column = x
+			tCases[currentCase].Grid.Column = x
 		} else {
-			tCases[currentCase].g.row = x
+			tCases[currentCase].Grid.Row = x
 		}
 	}
 	return tCases, nil
