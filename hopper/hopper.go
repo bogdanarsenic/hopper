@@ -1,68 +1,129 @@
 package main
 
-import "fmt"
+import (
+	"bufio"
+	"fmt"
+	"io"
+	"os"
+	"strconv"
+	"strings"
 
-type point struct {
-	x, y int
+	models "./models"
+	constants "./models/constants"
+	validators "./validators"
+)
+
+func start(reader io.Reader) []string {
+	sc := bufio.NewReader(reader)
+
+retry:
+
+	fmt.Println("Start Processing:")
+	lineNumber := 0
+	numOfCases := 0
+	caseAdded := 0
+	caseLine := 0
+	currentCase := 0
+	obstacleLines := -1
+
+	var tCases []*models.TCase
+
+	for {
+		if numOfCases > 0 && caseAdded == numOfCases {
+			break
+		}
+		line, err := sc.ReadString('\n')
+		if err != nil {
+			break
+		}
+		lineNumber++
+
+		currentLine := strings.TrimSpace(line)
+		if lineNumber == 1 {
+			numOfCases, err = strconv.Atoi(currentLine)
+			if err != nil || numOfCases < 1 || numOfCases > constants.MAX_GRID {
+				fmt.Printf("Invalid number of test cases. Please write one number between 1 and %d!\n", constants.MAX_GRID)
+				goto retry
+			}
+			tCases = make([]*models.TCase, numOfCases)
+		} else {
+			switch caseLine {
+			case 0:
+				tCases, err = validators.ValidateGrid(tCases, currentCase, currentLine)
+				if err != nil {
+					fmt.Println(err)
+					goto retry
+				}
+				caseLine++
+			case 1:
+				tCases, err = validators.ValidatePosition(tCases, currentCase, currentLine, caseLine)
+				if err != nil {
+					fmt.Println(err)
+					goto retry
+				}
+				caseLine++
+			case 2:
+				obstacleLines, err = strconv.Atoi(currentLine)
+				if err != nil || obstacleLines < 1 || obstacleLines > constants.MAX_GRID {
+					fmt.Printf("Invalid number of obstacles. Please write one number between 1 and %d!\n", constants.MAX_GRID)
+					goto retry
+				}
+				caseLine++
+			default:
+				tCases, err = validators.ValidatePosition(tCases, currentCase, currentLine, caseLine)
+				if err != nil {
+					fmt.Println(err)
+					goto retry
+				}
+				obstacleLines--
+				if obstacleLines == 0 {
+					caseLine = 0
+					caseAdded++
+					currentCase++
+				}
+			}
+		}
+	}
+	return gettingOutput(tCases)
 }
 
-type grid struct {
-	column, row int
+func gettingOutput(tCases []*models.TCase) []string {
+	output := make([]string, len(tCases))
+	for i := range tCases {
+		hops := processTestCase(tCases[i].Grid, tCases[i].Route, tCases[i].Obstacles)
+		if hops == -1 {
+			output[i] = "No solution."
+		} else {
+			output[i] = fmt.Sprintf("Optimal solution takes %d hops.", hops)
+		}
+	}
+	return output
 }
 
-type hopperAt struct {
-	position point
-	velocity point
-	hop      int
-}
+func processTestCase(g models.Grid, r models.Route, o []models.Obstacle) int {
+	grid := make([][]bool, g.Column)
 
-type route struct {
-	start, end point
-}
-
-type obstacle struct {
-	x1, x2, y1, y2 int
-}
-
-type tCase struct {
-	g    grid
-	r    route
-	o    []obstacle
-	next *tCase
-}
-
-const MAX_VELOCITY = 3
-
-func processInput(test tCase) int {
-
-	grid := make([][]bool, test.g.column)
-
-	for i := 0; i < test.g.column; i++ {
-		grid[i] = make([]bool, test.g.row)
+	for i := 0; i < g.Column; i++ {
+		grid[i] = make([]bool, g.Row)
 	}
 
-	for _, obs := range test.o {
-		for i := obs.x1; i <= obs.x2; i++ {
-			for y := obs.y1; y <= obs.y2; y++ {
+	for _, obs := range o {
+		for i := obs.X1; i <= obs.X2; i++ {
+			for y := obs.Y1; y <= obs.Y2; y++ {
 				grid[i][y] = true
 			}
 		}
 	}
 
-	minHops := findMinHops(grid, test)
+	minHops := findMinHops(grid, r)
 	return minHops
 }
 
-func findMinHops(grid [][]bool, test tCase) int {
-	newHopper := hopperAt{}
+func findMinHops(grid [][]bool, r models.Route) int {
+	newHopper := models.HopperAt{Position: r.Start, Velocity: models.Point{X: 0, Y: 0}, Hop: 0}
+	finish := r.End
 
-	newHopper.position = test.r.start
-	newHopper.velocity.x = 0
-	newHopper.velocity.y = 0
-	newHopper.hop = 0
-	finish := test.r.end
-
-	possibleHops := []*hopperAt{&newHopper}
+	possibleHops := []*models.HopperAt{&newHopper}
 
 	dx := []int{-1, -1, -1, 0, 0, 1, 1, 1}
 	dy := []int{-1, 0, 1, -1, 1, -1, 0, 1}
@@ -71,18 +132,18 @@ func findMinHops(grid [][]bool, test tCase) int {
 		currentHop := possibleHops[0]
 		possibleHops = possibleHops[1:]
 
-		if currentHop.position == finish {
-			return currentHop.hop
+		if currentHop.Position == finish {
+			return currentHop.Hop
 		}
 
 		for i := 0; i < 8; i++ {
-			nextPoint := point{currentHop.position.x + currentHop.velocity.x + dx[i], currentHop.position.y + currentHop.velocity.y + dy[i]}
-			if nextPoint.x < 0 || nextPoint.y < 0 || nextPoint.x >= len(grid) || nextPoint.y >= len(grid[0]) || grid[nextPoint.x][nextPoint.y] {
+			nextPoint := models.Point{X: currentHop.Position.X + currentHop.Velocity.X + dx[i], Y: currentHop.Position.Y + currentHop.Velocity.Y + dy[i]}
+			if nextPoint.X < 0 || nextPoint.Y < 0 || nextPoint.X >= len(grid) || nextPoint.Y >= len(grid[0]) || grid[nextPoint.X][nextPoint.Y] {
 				continue
 			}
-			newVelocity := point{currentHop.velocity.x + dx[i], currentHop.velocity.y + dy[i]}
-			if abs(newVelocity.x) <= MAX_VELOCITY && abs(newVelocity.y) <= MAX_VELOCITY {
-				possibleHops = append(possibleHops, &hopperAt{nextPoint, newVelocity, currentHop.hop + 1})
+			newVelocity := models.Point{X: currentHop.Velocity.X + dx[i], Y: currentHop.Velocity.Y + dy[i]}
+			if abs(newVelocity.X) <= constants.MAX_VELOCITY && abs(newVelocity.Y) <= constants.MAX_VELOCITY {
+				possibleHops = append(possibleHops, &models.HopperAt{Position: nextPoint, Velocity: newVelocity, Hop: currentHop.Hop + 1})
 			}
 		}
 	}
@@ -97,11 +158,8 @@ func abs(x int) int {
 }
 
 func main() {
-
-	obstacles := []obstacle{{1, 4, 2, 3}}
-
-	testInput := tCase{g: grid{5, 5}, r: route{start: point{4, 0}, end: point{4, 4}}, o: obstacles}
-
-	hop := processInput(testInput)
-	fmt.Println(hop)
+	outputs := start(os.Stdin)
+	for _, output := range outputs {
+		fmt.Println(output)
+	}
 }
