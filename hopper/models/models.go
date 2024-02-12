@@ -26,5 +26,4 @@ type TCase struct {
 	Grid      Grid
 	Route     Route
 	Obstacles []Obstacle
-	Next      *TCase
 }

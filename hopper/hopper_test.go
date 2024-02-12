@@ -9,7 +9,7 @@ import (
 	models "./models"
 )
 
-func Test_hopper(t *testing.T) {
+func Test_processTestCase(t *testing.T) {
 	type args struct {
 		Grid      models.Grid
 		Route     models.Route
@@ -65,7 +65,7 @@ func Test_hopper(t *testing.T) {
 	}
 }
 
-func Test_hopperStart(t *testing.T) {
+func Test_startProcess(t *testing.T) {
 	type args struct {
 		reader io.Reader
 	}
@@ -76,7 +76,8 @@ func Test_hopperStart(t *testing.T) {
 	}{
 		{
 			name: "test",
-			args: args{reader: strings.NewReader(`2
+			args: args{reader: strings.NewReader(
+				`2
 5 5
 4 0 4 4
 1
@@ -86,14 +87,13 @@ func Test_hopperStart(t *testing.T) {
 2
 1 1 0 2
 0 2 1 1
-
 `)},
 			want: []string{"Optimal solution takes 7 hops.", "No solution."},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := start(tt.args.reader); !reflect.DeepEqual(got, tt.want) {
+			if got := startProcess(tt.args.reader); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("start() = %v, want %v", got, tt.want)
 			}
 		})
